@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "hotels",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "roomAvailable",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Deparement",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
