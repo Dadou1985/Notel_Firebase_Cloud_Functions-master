@@ -17,6 +17,8 @@ const bodyParser = require('body-parser');
 
 const webPush = require('web-push');
 
+
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://notel-765b1.firebaseio.com"
@@ -29,8 +31,14 @@ const createNotifications = ((notification, documentId) => {
     .then(doc => console.log('nouvelle notitfication'))
 })
 
-const deleteGuest = (guestId) => {
+const deleteGuest = async(hotelId, guestName, guestId) => {
     const db = admin.firestore(); 
+    await db.collection("hotels")
+      .doc(hotelId)
+      .collection("chat")
+      .doc(guestName)
+      .update({checkoutDate: ""})
+
     return db.collection('guestUsers')
     .doc(guestId)
     .update({
@@ -95,7 +103,7 @@ exports.sendCheckoutMail = functions.firestore
                })        
              });
              return snapInfo.map(guest => {
-               return deleteGuest(guest.id)
+               return deleteGuest(guest.hotelId, guest.username, guest.id)
              })
            });
    }
