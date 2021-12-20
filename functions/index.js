@@ -31,14 +31,8 @@ const createNotifications = ((notification, documentId) => {
     .then(doc => console.log('nouvelle notitfication'))
 })
 
-const deleteGuest = async(hotelId, guestName, guestId) => {
+const deleteGuest = (guestId) => {
     const db = admin.firestore(); 
-    await db.collection("hotels")
-      .doc(hotelId)
-      .collection("chat")
-      .doc(guestName)
-      .update({checkoutDate: ""})
-
     return db.collection('guestUsers')
     .doc(guestId)
     .update({
@@ -89,24 +83,72 @@ exports.sendCheckoutMail = functions.firestore
 
 })
 
-   const deleteListGuest = () => {
-    const db = admin.firestore(); 
-      return db.collection('guestUsers')
-        .where("checkoutDate", "==", dayjs().format('DD/MM/YYYY'))
-        .get()
-        .then((querySnapshot) => {
-         const snapInfo = []
-         querySnapshot.forEach((doc) => {          
-             snapInfo.push({
-                 id: doc.id,
-                 ...doc.data()
-               })        
-             });
-             return snapInfo.map(guest => {
-               return deleteGuest(guest.hotelId, guest.username, guest.id)
-             })
-           });
-   }
+exports.sendWelcomeMail = functions.https.onCall((data, context) => {
+  const prospectMail = data.prospectMails
+  const prospectName = data.prospectName
+  const mshLogo = data.mshLogo
+  const mshLogoPro = data.mshLogoPro
+
+
+  return admin.firestore().collection("mail")
+    .add({
+        from: "David Simba <contact@mysweethotel.com>",
+        to: prospectMail,
+        template: {
+            name: "welcome",
+            data: {
+              prospectName: prospectName,
+              prospectMail: prospectMail,
+              mshLogo: mshLogo,
+              mshLogoPro: mshLogoPro
+            }
+        }
+    })
+})
+
+exports.sendNewCoworkerAccountMail = functions.https.onCall((data, context) => {
+  const adminName = data.adminName
+  const coworkerMail = data.coworkerMail
+  const coworkerName = data.coworkerName
+  const mshLogo = data.mshLogo
+  const mshLogoPro = data.mshLogoPro
+
+
+  return admin.firestore().collection("mail")
+    .add({
+        from: "David Simba <contact@mysweethotel.com>",
+        to: coworkerMail,
+        template: {
+            name: "newCoworkerAccount",
+            data: {
+              adminName: adminName,
+              coworkerName: coworkerName,
+              coworkerMail: coworkerMail,
+              mshLogo: mshLogo,
+              mshLogoPro: mshLogoPro
+            }
+        }
+    })
+})
+
+const deleteListGuest = () => {
+const db = admin.firestore(); 
+  return db.collection('guestUsers')
+    .where("checkoutDate", "==", dayjs().format('DD/MM/YYYY'))
+    .get()
+    .then((querySnapshot) => {
+      const snapInfo = []
+      querySnapshot.forEach((doc) => {          
+          snapInfo.push({
+              id: doc.id,
+              ...doc.data()
+            })        
+          });
+          return snapInfo.map(guest => {
+            return deleteGuest(guest.id)
+          })
+        });
+}
 
 exports.scheduledDeleteUser = functions.pubsub.schedule('0 14 * * *')
    .timeZone('Europe/Berlin')
