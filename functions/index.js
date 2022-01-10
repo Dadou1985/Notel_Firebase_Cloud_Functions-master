@@ -131,6 +131,93 @@ exports.sendNewCoworkerAccountMail = functions.https.onCall((data, context) => {
     })
 })
 
+exports.sendSupportMail = functions.https.onCall((data, context) => {
+
+  return admin.firestore().collection("mail")
+    .add({
+        from: "MSH - Support Technique <contact@mysweethotel.com>",
+        to: "david.simba@mysweethotel.com",
+        message: {
+          subject: 'Hôtel en détresse',
+          text: 'Check le chat, y\'a du nouveau !!'
+        }
+    })
+})
+
+exports.sendNewSubscriber = functions.https.onCall((data, context) => {
+  const subscriber = data.subscriber
+  const hotel = data.hotel
+  const standing = data.standing
+  const country = data.country
+  const city = data.city
+  const capacity = data.capacity
+
+  return admin.firestore().collection("mail")
+    .add({
+        from:  `MSH - New Subscriber <contact@mysweethotel.com>`,
+        to: "david.simba@mysweethotel.com",
+        template: {
+          name: "newSubscriber",
+          data: {
+            subscriber: subscriber,
+            hotel: hotel,
+            standing: standing,
+            country: country,
+            city: city,
+            capacity: capacity
+          }
+      }
+    })
+})
+
+exports.sendWelcomeMailNoLogo = functions.https.onCall((data, context) => {
+  const firstName = data.firstName
+  const email = data.email
+  const appLink = data.appLink
+  const mshLogo = data.mshLogo
+  const mshLogoPro = data.mshLogoPro
+
+  return admin.firestore().collection("mail")
+    .add({
+        from:  `David de My Sweet Hotel <contact@mysweethotel.com>`,
+        to: "david.simba@mysweethotel.com",
+        template: {
+          name: "welcomeMailNoLogo",
+          data: {
+            firstName: firstName,
+            email: email,
+            appLink: appLink,
+            mshLogo: mshLogo,
+            mshLogoPro: mshLogoPro
+          }
+      }
+    })
+})
+
+exports.sendWelcomeMailLogo = functions.https.onCall((data, context) => {
+  const firstName = data.firstName
+  const email = data.email
+  const appLink = data.appLink
+  const mshLogo = data.mshLogo
+  const mshLogoPro = data.mshLogoPro
+
+  return admin.firestore().collection("mail")
+    .add({
+        from:  `David de My Sweet Hotel <contact@mysweethotel.com>`,
+        to: "david.simba@mysweethotel.com",
+        template: {
+          name: "welcomeMailLogo",
+          data: {
+            firstName: firstName,
+            email: email,
+            appLink: appLink,
+            mshLogo: mshLogo,
+            mshLogoPro: mshLogoPro
+          }
+      }
+    })
+})
+
 const deleteListGuest = () => {
 const db = admin.firestore(); 
   return db.collection('guestUsers')
