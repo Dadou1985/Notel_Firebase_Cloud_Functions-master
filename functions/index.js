@@ -83,6 +83,39 @@ exports.sendCheckoutMail = functions.firestore
 
 })
 
+exports.sendSupportMail = functions.https.onCall((data, context) => {
+  return admin.firestore().collection("mail")
+    .add({
+        from: "MSH - Support Technique <contact@mysweethotel.com>",
+        to: "david.simba@mysweethotel.com",
+        message: {
+          subject: 'Hôtel en détresse',
+          text: 'Check le chat, y\'a du nouveau !!'
+        }
+    })
+})
+
+exports.sendSupportAlert = functions.firestore
+.document('assistance/{hotelName}')
+.onUpdate((change) => {
+    const newData = change.after.data()
+    const status = newData.status
+
+    if(status === true) {
+      return admin.firestore().collection("mail")
+    .add({
+        from: "MSH - Support Technique <contact@mysweethotel.com>",
+        to: "david.simba@mysweethotel.com",
+        message: {
+          subject: 'Hôtel en détresse',
+          text: 'Check le chat, y\'a du nouveau !!'
+        }
+    })
+  }
+
+})
+
+
 exports.sendWelcomeMail = functions.https.onCall((data, context) => {
   const prospectMail = data.prospectMails
   const prospectName = data.prospectName
@@ -131,19 +164,6 @@ exports.sendNewCoworkerAccountMail = functions.https.onCall((data, context) => {
     })
 })
 
-exports.sendSupportMail = functions.https.onCall((data, context) => {
-
-  return admin.firestore().collection("mail")
-    .add({
-        from: "MSH - Support Technique <contact@mysweethotel.com>",
-        to: "david.simba@mysweethotel.com",
-        message: {
-          subject: 'Hôtel en détresse',
-          text: 'Check le chat, y\'a du nouveau !!'
-        }
-    })
-})
-
 exports.sendNewSubscriber = functions.https.onCall((data, context) => {
   const subscriber = data.subscriber
   const hotel = data.hotel
@@ -159,12 +179,12 @@ exports.sendNewSubscriber = functions.https.onCall((data, context) => {
         template: {
           name: "newSubscriber",
           data: {
-            subscriber: subscriber,
-            hotel: hotel,
-            standing: standing,
-            country: country,
-            city: city,
-            capacity: capacity
+            subscriber: `Responsable établissement: ${subscriber}`,
+            hotel: `Nom de l'établissement: ${hotel}`,
+            standing: `Classement: ${standing}`,
+            country: `Pays: ${country}`,
+            city: `Ville: ${city}`,
+            capacity: `Capacité: ${capacity} chambres`
           }
       }
     })
@@ -173,6 +193,8 @@ exports.sendNewSubscriber = functions.https.onCall((data, context) => {
 exports.sendWelcomeMailNoLogo = functions.https.onCall((data, context) => {
   const firstName = data.firstName
   const email = data.email
+  const fakeMail = data.fakeMail
+  const password = data.password
   const appLink = data.appLink
   const mshLogo = data.mshLogo
   const mshLogoPro = data.mshLogoPro
@@ -180,12 +202,14 @@ exports.sendWelcomeMailNoLogo = functions.https.onCall((data, context) => {
   return admin.firestore().collection("mail")
     .add({
         from:  `David de My Sweet Hotel <contact@mysweethotel.com>`,
-        to: "david.simba@mysweethotel.com",
+        to: email,
         template: {
           name: "welcomeMailNoLogo",
           data: {
             firstName: firstName,
             email: email,
+            fakeMail: fakeMail,
+            password: password,
             appLink: appLink,
             mshLogo: mshLogo,
             mshLogoPro: mshLogoPro
@@ -197,6 +221,8 @@ exports.sendWelcomeMailNoLogo = functions.https.onCall((data, context) => {
 exports.sendWelcomeMailLogo = functions.https.onCall((data, context) => {
   const firstName = data.firstName
   const email = data.email
+  const fakeMail = data.fakeMail
+  const password = data.password
   const appLink = data.appLink
   const mshLogo = data.mshLogo
   const mshLogoPro = data.mshLogoPro
@@ -204,12 +230,14 @@ exports.sendWelcomeMailLogo = functions.https.onCall((data, context) => {
   return admin.firestore().collection("mail")
     .add({
         from:  `David de My Sweet Hotel <contact@mysweethotel.com>`,
-        to: "david.simba@mysweethotel.com",
+        to: email,
         template: {
           name: "welcomeMailLogo",
           data: {
             firstName: firstName,
             email: email,
+            fakeMail: fakeMail,
+            password: password,
             appLink: appLink,
             mshLogo: mshLogo,
             mshLogoPro: mshLogoPro
