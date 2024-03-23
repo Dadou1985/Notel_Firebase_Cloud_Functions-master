@@ -17,8 +17,6 @@ const bodyParser = require('body-parser');
 
 const webPush = require('web-push');
 
-
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://notel-765b1.firebaseio.com"
@@ -32,55 +30,70 @@ const createNotifications = ((notification, documentId) => {
 })
 
 const deleteGuest = (guestId) => {
-    const db = admin.firestore(); 
-    return db.collection('guestUsers')
-    .doc(guestId)
-    .update({
-      checkoutDate: "",
-      hotelId: "",
-      hotelName: "",
-      hotelDept: "",
-      hotelRegion: "",
-      room: "",
-      phone: "",
-      city: "",
-      classement: "",
-      babyBed: false,
-      blanket: false,
-      hairDryer: false,
-      iron: false,
-      pillow: false,
-      toiletPaper: false,
-      towel: false,
-      soap: false
-    })
-   }
+  const db = admin.firestore(); 
+  return db.collection('guestUsers')
+  .doc(guestId)
+  .update({
+    checkoutDate: "",
+    hotelId: "",
+    hotelName: "",
+    hotelDept: "",
+    hotelRegion: "",
+    room: "",
+    phone: "",
+    city: "",
+    classement: "",
+    babyBed: false,
+    blanket: false,
+    hairDryer: false,
+    iron: false,
+    pillow: false,
+    toiletPaper: false,
+    towel: false,
+    soap: false,
+    journeyId: ""
+  })
+}
+
+const deleteGuestChat = (hotelId, guestName) => {
+  const db = admin.firestore(); 
+  return  db.collection('hotels')
+  .doc(hotelId)
+  .collection('chat')
+  .doc(guestName)
+  .update({
+    checkoutDate: "",
+    room: "",
+    status: false,
+    isChatting: false,
+    hotelResponding: false
+  })      
+}
 
 exports.sendCheckoutMail = functions.firestore
-.document('guestUsers/{guestId}')
-.onUpdate((change) => {
-    const previousData = change.before.data()
-    const newData = change.after.data()
-    const hotelName = previousData.hotelName
-    const logo = previousData.logo
-    const checkoutDate = newData.checkoutDate
-    const email = previousData.email
+  .document('guestUsers/{guestId}')
+  .onUpdate((change) => {
+      const previousData = change.before.data()
+      const newData = change.after.data()
+      const hotelName = previousData.hotelName
+      const logo = previousData.logo
+      const checkoutDate = newData.checkoutDate
+      const email = previousData.email
 
-    if(checkoutDate === "") {
-      return admin.firestore().collection("mail")
-      .add({
-          from: `${hotelName} <contact@mysweethotel.com>`,
-          to: [email],
-          template: {
-              name: "checkOut",
-              data: {
-                logo: logo,
-                hotelName: hotelName
-              }
-          }
-      })
-     }
-
+  if(checkoutDate === "") {
+    return admin.firestore().collection("mail")
+    .add({
+        from: `${hotelName} <contact@mysweethotel.com>`,
+        to: [email],
+        template: {
+            name: "checkOut",
+            data: {
+              logo: logo,
+              hotelName: hotelName
+            }
+        }
+    })
+  }
 })
 
 exports.sendSupportMail = functions.https.onCall((data, context) => {
@@ -112,7 +125,6 @@ exports.sendSupportAlert = functions.firestore
         }
     })
   }
-
 })
 
 
@@ -190,6 +202,34 @@ exports.sendNewSubscriber = functions.https.onCall((data, context) => {
     })
 })
 
+exports.sendWelcomeMail = functions.https.onCall((data, context) => {
+  const firstName = data.firstName
+  const email = data.email
+  const fakeMail = data.fakeMail
+  const password = data.password
+  const appLink = data.appLink
+  const mshLogo = data.mshLogo
+  const mshBanner = data.mshBanner
+
+  return admin.firestore().collection("mail")
+    .add({
+        from:  `David de My Sweet Hotel <contact@mysweethotel.com>`,
+        to: email,
+        template: {
+          name: "welcomeMail",
+          data: {
+            firstName: firstName,
+            email: email,
+            fakeMail: fakeMail,
+            password: password,
+            appLink: appLink,
+            mshLogo: mshLogo,
+            mshBanner: mshBanner
+          }
+      }
+    })
+})
+
 exports.sendWelcomeMailNoLogo = functions.https.onCall((data, context) => {
   const firstName = data.firstName
   const email = data.email
@@ -260,6 +300,7 @@ const db = admin.firestore();
             })        
           });
           return snapInfo.map(guest => {
+                   deleteGuestChat(guest.hotelId, guest.username)
             return deleteGuest(guest.id)
           })
         });
